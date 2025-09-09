@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Algorithm Visualizer</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align:center; background:#f9f9f9; }
+    h2 { margin-top:20px; }
+    button { margin:5px; padding:8px 12px; border:none; background:#4CAF50; color:white; border-radius:6px; cursor:pointer; }
+    button:hover { background:#45a049; }
+    input { margin:5px; padding:6px; }
+    .tab-buttons { margin:20px; }
+    .section { display:none; margin-top:20px; }
+    .active { display:block; }
+    .array-bar { display:inline-block; margin:0 1px; background:steelblue; }
+    svg { margin-top:10px; }
+  </style>
+</head>
+<body>
+
+  <h1>Algorithm Visualizer</h1>
+
+  <!-- Tab Navigation -->
+  <div class="tab-buttons">
+    <button onclick="showSection('sorting')">Sorting</button>
+    <button onclick="showSection('searching')">Searching</button>
+    <button onclick="showSection('trees')">Trees</button>
+  </div>
+
+  <!-- Sorting Section -->
+  <div id="sorting" class="section active">
+    <h2>Sorting Visualizer</h2>
+    <input id="customArray" type="text" placeholder="Enter numbers e.g. 5,3,8,1">
+    <button onclick="loadCustomArray()">Load Array</button>
+    <button onclick="generateArray()">Generate Random Array</button>
+    <br>
+    <button onclick="startSort('bubble')">Bubble Sort</button>
+    <button onclick="startSort('selection')">Selection Sort</button>
+    <button onclick="startSort('insertion')">Insertion Sort</button>
+    <button onclick="startSort('merge')">Merge Sort</button>
+    <button onclick="pauseSort()">Pause</button>
+    <button onclick="resumeSort()">Resume</button>
+    <br>
+    <label>Speed: </label>
+    <input id="speedControl" type="range" min="50" max="1000" value="300">
+    <div id="sortTime" style="margin-top:10px; font-weight:bold;"></div>
+    <div id="array"></div>
+  </div>
+
+  <!-- Searching Section -->
+  <div id="searching" class="section">
+    <h2>Searching Visualizer</h2>
+    <input id="customSearchArray" type="text" placeholder="Enter sorted numbers e.g. 2,4,7,10">
+    <button onclick="loadSearchArray()">Load Array</button>
+    <button onclick="generateSearchArray()">Generate Random Array</button>
+    <br>
+    <input id="searchKey" type="number" placeholder="Enter number to search">
+    <button onclick="linearSearch()">Linear Search</button>
+    <button onclick="binarySearch()">Binary Search</button>
+    <div id="searchTime" style="margin-top:10px; font-weight:bold;"></div>
+    <div id="searchArray"></div>
+  </div>
+
+  <!-- Trees Section -->
+  <div id="trees" class="section">
+    <h2>Tree Visualizer (Binary Search Tree)</h2>
+    <div>
+      <input id="treeInput" type="number" placeholder="Enter number">
+      <button id="insertNode">Insert</button>
+      <button id="inorderBtn">Inorder Traversal</button>
+      <button id="preorderBtn">Preorder Traversal</button>
+      <button id="postorderBtn">Postorder Traversal</button>
+      <button id="resetTree">Reset Tree</button>
+    </div>
+    <div id="treeTime" style="margin-top:10px; font-weight:bold;"></div>
+    <svg id="treeCanvas" width="800" height="400" style="border:1px solid #ccc; background:white;"></svg>
+  </div>
+
+  <script>
+    // -------- TAB SWITCHING --------
+    function showSection(sectionId){
+      document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+      document.getElementById(sectionId).classList.add('active');
+    }
+
+    // -------- SORTING VISUALIZER --------
+    let arr = [], sorting=false, paused=false;
+
+    function generateArray(){
+      arr = Array.from({length:15},()=>Math.floor(Math.random()*50)+5);
+      renderArray();
+    }
+
+    function loadCustomArray(){
+      const input = document.getElementById("customArray").value;
+      arr = input.split(",").map(x=>parseInt(x.trim())).filter(x=>!isNaN(x));
+      renderArray();
+    }
+
+    function renderArray(highlightIdx=-1){
+      const container = document.getElementById("array");
+      container.innerHTML="";
+      arr.forEach((val,i)=>{
+        const bar = document.createElement("div");
+        bar.className="array-bar";
+        bar.style.height=val*5+"px";
+        bar.style.width="20px";
+        bar.style.background=i===highlightIdx?"red":"steelblue";
+        container.appendChild(bar);
+      });
+    }
+
+    function getSpeed(){ return parseInt(document.getElementById("speedControl").value); }
+    function pauseSort(){ paused=true; }
+    function resumeSort(){ paused=false; }
+    async function wait(ms){ while(paused) await new Promise(r=>setTimeout(r,100)); return new Promise(r=>setTimeout(r,ms)); }
+
+    function startSort(type){
+      if(sorting) return;
+      sorting=true;
+      if(type==="bubble") bubbleSort();
+      if(type==="selection") selectionSort();
+      if(type==="insertion") insertionSort();
+      if(type==="merge") mergeSort();
+    }
+
+    // Bubble Sort
+    async function bubbleSort(){
+      const start=performance.now();
+      for(let i=0;i<arr.length;i++){
+        for(let j=0;j<arr.length-i-1;j++){
+          if(arr[j]>arr[j+1]) [arr[j],arr[j+1]]=[arr[j+1],arr[j]];
+          renderArray(j);
+          await wait(getSpeed());
+        }
+      }
+      const end=performance.now();
+      document.getElementById("sortTime").innerText=`Bubble Sort Time: ${(end-start).toFixed(2)} ms`;
+      sorting=false;
+      renderArray();
+    }
+
+    // Selection Sort
+    async function selectionSort(){
+      const start=performance.now();
+      for(let i=0;i<arr.length;i++){
+        let minIdx=i;
+        for(let j=i+1;j<arr.length;j++){
+          if(arr[j]<arr[minIdx]) minIdx=j;
+          renderArray(j);
+          await wait(getSpeed());
+        }
+        [arr[i],arr[minIdx]]=[arr[minIdx],arr[i]];
+      }
+      const end=performance.now();
+      document.getElementById("sortTime").innerText=`Selection Sort Time: ${(end-start).toFixed(2)} ms`;
+      sorting=false;
+      renderArray();
+    }
+
+    // Insertion Sort
+    async function insertionSort(){
+      const start=performance.now();
+      for(let i=1;i<arr.length;i++){
+        let key=arr[i], j=i-1;
+        while(j>=0 && arr[j]>key){
+          arr[j+1]=arr[j];
+          renderArray(j);
+          await wait(getSpeed());
+          j--;
+        }
+        arr[j+1]=key;
+      }
+      const end=performance.now();
+      document.getElementById("sortTime").innerText=`Insertion Sort Time: ${(end-start).toFixed(2)} ms`;
+      sorting=false;
+      renderArray();
+    }
+
+    // Merge Sort
+    async function mergeSort(){
+      const start=performance.now();
+      async function merge(arr,l,r){
+        if(l>=r) return;
+        const m=Math.floor((l+r)/2);
+        await merge(arr,l,m);
+        await merge(arr,m+1,r);
+        let left=arr.slice(l,m+1), right=arr.slice(m+1,r+1);
+        let i=0,j=0,k=l;
+        while(i<left.length && j<right.length){
+          if(left[i]<=right[j]) arr[k]=left[i++];
+          else arr[k]=right[j++];
+          renderArray(k);
+          await wait(getSpeed());
+          k++;
+        }
+        while(i<left.length){ arr[k++]=left[i++]; renderArray(k-1); await wait(getSpeed()); }
+        while(j<right.length){ arr[k++]=right[j++]; renderArray(k-1); await wait(getSpeed()); }
+      }
+      await merge(arr,0,arr.length-1);
+      const end=performance.now();
+      document.getElementById("sortTime").innerText=`Merge Sort Time: ${(end-start).toFixed(2)} ms`;
+      sorting=false;
+      renderArray();
+    }
+
+    generateArray();
+
+    // -------- SEARCHING VISUALIZER --------
+    let searchArr=[];
+    function generateSearchArray(){ searchArr=Array.from({length:12},()=>Math.floor(Math.random()*90)+10).sort((a,b)=>a-b); renderSearchArray(); }
+    function loadSearchArray(){ const input=document.getElementById("customSearchArray").value; searchArr=input.split(",").map(x=>parseInt(x.trim())).filter(x=>!isNaN(x)).sort((a,b)=>a-b); renderSearchArray(); }
+    function renderSearchArray(highlightIdx=-1){
+      const container=document.getElementById("searchArray"); container.innerHTML="";
+      searchArr.forEach((val,i)=>{
+        const bar=document.createElement("div");
+        bar.className="array-bar"; bar.style.height=val*3+"px"; bar.style.width="20px";
+        bar.style.background=i===highlightIdx?"orange":"teal";
+        container.appendChild(bar);
+      });
+    }
+
+    async function linearSearch(){
+      const key=parseInt(document.getElementById("searchKey").value);
+      const start=performance.now(); let found=false;
+      for(let i=0;i<searchArr.length;i++){
+        renderSearchArray(i);
+        await new Promise(r=>setTimeout(r,400));
+        if(searchArr[i]===key){ found=true; break; }
+      }
+      const end=performance.now();
+      document.getElementById("searchTime").innerText=`Linear Search Time: ${(end-start).toFixed(2)} ms` + (found?" ✅ Found":" ❌ Not Found");
+    }
+
+    async function binarySearch(){
+      const key=parseInt(document.getElementById("searchKey").value);
+      const start=performance.now(); let found=false;
+      let l=0,r=searchArr.length-1;
+      while(l<=r){
+        const mid=Math.floor((l+r)/2);
+        renderSearchArray(mid);
+        await new Promise(r=>setTimeout(r,400));
+        if(searchArr[mid]===key){ found=true; break; }
+        else if(searchArr[mid]<key) l=mid+1;
+        else r=mid-1;
+      }
+      const end=performance.now();
+      document.getElementById("searchTime").innerText=`Binary Search Time: ${(end-start).toFixed(2)} ms` + (found?" ✅ Found":" ❌ Not Found");
+    }
+
+    generateSearchArray();
+
+    // -------- TREE VISUALIZER --------
+    class TreeNode{ constructor(val){ this.val=val; this.left=null; this.right=null; this.x=0; this.y=0; } }
+    let root=null;
+    function insertBST(node,val){ if(!node) return new TreeNode(val); if(val<node.val) node.left=insertBST(node.left,val); else node.right=insertBST(node.right,val); return node; }
+    function assignPositions(node,depth=0,x=400,offset=200){ if(!node) return; node.x=x; node.y=50+depth*70; assignPositions(node.left,depth+1,x-offset,offset/2); assignPositions(node.right,depth+1,x+offset,offset/2); }
+    function renderTree(){ const svg=document.getElementById("treeCanvas"); svg.innerHTML=""; if(!root) return; assignPositions(root); drawNode(svg,root); }
+    function drawNode(svg,node){ if(!node) return; if(node.left){ svg.innerHTML+=`<line x1="${node.x}" y1="${node.y}" x2="${node.left.x}" y2="${node.left.y}" stroke="black"/>`; drawNode(svg,node.left); } if(node.right){ svg.innerHTML+=`<line x1="${node.x}" y1="${node.y}" x2="${node.right.x}" y2="${node.right.y}" stroke="black"/>`; drawNode(svg,node.right); } svg.innerHTML+=`<circle id="node-${node.val}" cx="${node.x}" cy="${node.y}" r="18" fill="lightblue" stroke="black"/>`; svg.innerHTML+=`<text x="${node.x}" y="${node.y+4}" font-size="12" text-anchor="middle">${node.val}</text>`; }
+    async function inorderTraversal(node){ renderTree(); const start=performance.now(); await inorder(node); const end=performance.now(); document.getElementById("treeTime").innerText=`Inorder Traversal Time: ${(end-start).toFixed(2)} ms`; }
+    async function preorderTraversal(node){ renderTree(); const start=performance.now(); await preorder(node); const end=performance.now(); document.getElementById("treeTime").innerText=`Preorder Traversal Time: ${(end-start).toFixed(2)} ms`; }
+    async function postorderTraversal(node){ renderTree(); const start=performance.now(); await postorder(node); const end=performance.now(); document.getElementById("treeTime").innerText=`Postorder Traversal Time: ${(end-start).toFixed(2)} ms`; }
+    async function inorder(node){ if(!node) return; await inorder(node.left); await highlightNode(node); await inorder(node.right); }
+    async function preorder(node){ if(!node) return; await highlightNode(node); await preorder(node.left); await preorder(node.right); }
+    async function postorder(node){ if(!node) return; await postorder(node.left); await postorder(node.right); await highlightNode(node); }
+    async function highlightNode(node){ const circle=document.getElementById(`node-${node.val}`); if(circle) circle.setAttribute("fill","yellow"); await new Promise(r=>setTimeout(r,600)); }
+
+    document.getElementById("insertNode").onclick=()=>{ const val=parseInt(document.getElementById("treeInput").value); if(!isNaN(val)){ root=insertBST(root,val); renderTree(); } };
+    document.getElementById("inorderBtn").onclick=()=>inorderTraversal(root);
+    document.getElementById("preorderBtn").onclick=()=>preorderTraversal(root);
+    document.getElementById("postorderBtn").onclick=()=>postorderTraversal(root);
+    document.getElementById("resetTree").onclick=()=>{ root=null; renderTree(); document.getElementById("treeTime").innerText=""; };
+  </script>
+</body>
+</html>
