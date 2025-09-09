@@ -22,7 +22,7 @@ Demonstrates understanding of data structures, algorithms, asynchronous visualiz
 Screenshots
 Sorting Visualizer
 
-screenshots/mergesort.gif
+![Merge Sort](screenshots/mergesort.gif)
 
 Searching Visualizer
 
@@ -44,4 +44,5 @@ Input custom data or generate random arrays.
 
 
 Run algorithms and observe interactive animations with runtime display.
+
 
