@@ -22,8 +22,7 @@ Demonstrates understanding of data structures, algorithms, asynchronous visualiz
 Screenshots
 Sorting Visualizer
 
-
-Step-by-step animation showing sorting progress, highlighted comparisons, and runtime display.
+![Merge Sort](screenshots/mergesort.gif)
 
 Searching Visualizer
 
@@ -42,5 +41,6 @@ Open index.html in a modern browser.
 Navigate tabs for Sorting, Searching, or Trees.
 
 Input custom data or generate random arrays.
+
 
 Run algorithms and observe interactive animations with runtime display.
